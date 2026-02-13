@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",           /* CHANGED: standard for Node.js */
+    "moduleResolution": "node",     /* CHANGED: allows imports without extensions */
+    "rootDir": "./src",
+    "outDir": "./build",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
+}
