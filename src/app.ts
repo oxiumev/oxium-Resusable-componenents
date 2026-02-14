@@ -3,6 +3,7 @@ import { globalErrorHandler } from "./lib/error/globalErrorHandler";
 import { authRoute } from "./module/auth/auth.route";
 
 const app = express();
+app.use(express.json())
 
 app.get("/", (_, res: Response) => {
     res.json({ ok: true, message: "Server is happy!" });

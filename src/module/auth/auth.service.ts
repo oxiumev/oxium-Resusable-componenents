@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
 import { UnauthorizedError } from "../../lib/error";
-import {  generateAccessToken, generateTokens, verifyAccessToken, verifyRefreshToken } from "./auth.util";
+import { generateAccessToken, generateTokens, verifyAccessToken, verifyRefreshToken } from "./auth.util";
 import { getCookieOptions } from "./auth.config";
 import { ENV } from "../../config/env";
 import { User } from "../../model/auth/userModel";
@@ -50,7 +50,7 @@ export const refreshAccessToken = (req: Request, res: Response) => {
         throw new UnauthorizedError("No refresh token found. Please log in again.");
     }
     const decodedPayload = verifyRefreshToken(currentRefreshToken);
-    const accessToken = generateAccessToken({userId: decodedPayload.userId});
+    const accessToken = generateAccessToken({ userId: decodedPayload.userId });
     res.cookie("accessToken", accessToken, getCookieOptions("access"));
     res.status(200).json({
         status: "success",
@@ -61,12 +61,12 @@ export const logoutDevice = async (req: Request, res: Response, next: NextFuncti
     try {
         const currentAccessToken = req.cookies?.accessToken;
         if (!currentAccessToken) {
-            return logout(req, res); 
+            return logout(req, res);
         }
         const decodedPayload = verifyAccessToken(currentAccessToken);
 
         const user = await User.findById(decodedPayload.userId)
-            .select('+tokens.github.accessToken +tokens.google.accessToken'); 
+            .select('+tokens.github.accessToken +tokens.google.accessToken');
 
         if (user) {
             if (user.tokens?.github?.accessToken) {
@@ -86,4 +86,21 @@ export const logoutDevice = async (req: Request, res: Response, next: NextFuncti
     } catch (error) {
         next(error);
     }
+}
+
+export const localLogin = async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('local', { session: false }, (err: any, user: any, info: any) => {
+        if (err) return next(err);
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: info?.message || "Invalid credentials"
+            });
+        }
+        login(user,res)    
+        return res.json({
+            success:true,
+            message:"Login sucess"
+        })
+    })(req, res, next);
 }

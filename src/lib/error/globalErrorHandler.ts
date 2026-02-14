@@ -34,6 +34,7 @@ export const globalErrorHandler = (
     }
 
     res.status(statusCode).json({
+        success:false,
         status: statusCode >= 500 ? "error" : "fail",
         code,    
         message,
