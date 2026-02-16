@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      target: production
+    container_name: oxium-app
+    restart: always
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "4000:4000"
+    command: ["node", "build/src/server.js"]
+
+  worker:
+    build:
+      target: production
+    restart: always
+    environment:
+      - NODE_ENV=production
+    # SCALING: Runs 2 worker instances
+    deploy:
+      mode: replicated
+      replicas: 2
+    command: ["node", "build/worker/server.js"]

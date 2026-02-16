@@ -14,5 +14,7 @@ export const ENV = {
     GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || 'http://127.0.0.1:4000/auth/google/callback',
     GITHUB_CALLBACK_URL: process.env.GITHUB_CALLBACK_URL || 'http://127.0.0.1:4000/auth/github/callback',
     DOMAIN: process.env.DOMAIN || '127.0.0.1',
-    FRONTEND_URL: process.env.FRONTEND_URL || ""
+    FRONTEND_URL: process.env.FRONTEND_URL || "",
+    REDIS_HOST:process.env.REDIS_HOST || 'localhost',
+    REDIS_PORT:Number(process.env.REDIS_PORT) || 6379,
 };

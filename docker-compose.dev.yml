@@ -1,0 +1,24 @@
+services:
+  app:
+    build:
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # FIX: Forces watcher to see changes
+    command: npm run dev:docker
+    ports:
+      - "4000:4000"
+
+  worker:
+    build:
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # FIX: Forces watcher to see changes
+    command: npx tsx watch worker/server.ts
