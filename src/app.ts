@@ -10,6 +10,7 @@ import {
 import { globalErrorHandler } from "./lib/error/globalErrorHandler";
 import { authRoute } from "./module/auth/auth.route";
 import { testRoute } from "./module/test/test.route";
+import { otpRoute } from "./module/otp/otp.route";
 import { loggerMiddleware } from "./lib/logger/pino";
 
 const app = express();
@@ -30,6 +31,7 @@ app.get("/", (req, res: Response) => {
 });
 app.use("/auth",authRoute)
 app.use("/test",testRoute)
+app.use("/otp", otpRoute)
 
 
 app.use(globalErrorHandler);

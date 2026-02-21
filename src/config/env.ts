@@ -17,4 +17,5 @@ export const ENV = {
     FRONTEND_URL: process.env.FRONTEND_URL || "",
     REDIS_HOST:process.env.REDIS_HOST || 'localhost',
     REDIS_PORT:Number(process.env.REDIS_PORT) || 6379,
+    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
 };
