@@ -1,21 +1,43 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
+
 dotenv.config();
-export const ENV = {
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    PORT: process.env.PORT || 4000,
-    MONGO_URI: process.env.MONGO_URI || 'mongodb://localhost:27017/oxium',
-    JWT_SECRET: process.env.JWT_SECRET || 'supersecretkey',
-    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || '',
-    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET || '',
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
-    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || 'access_secret',    
-    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
-    GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || 'http://127.0.0.1:4000/auth/google/callback',
-    GITHUB_CALLBACK_URL: process.env.GITHUB_CALLBACK_URL || 'http://127.0.0.1:4000/auth/github/callback',
-    DOMAIN: process.env.DOMAIN || '127.0.0.1',
-    FRONTEND_URL: process.env.FRONTEND_URL || "",
-    REDIS_HOST:process.env.REDIS_HOST || 'localhost',
-    REDIS_PORT:Number(process.env.REDIS_PORT) || 6379,
-    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
+
+const envSchema = z.object({
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    PORT: z.coerce.number().int().positive().default(4000),
+    MONGO_URI: z.string().min(1).default('mongodb://localhost:27017/oxium'),
+    JWT_SECRET: z.string().min(1).default('supersecretkey'),
+    GITHUB_CLIENT_ID: z.string().default(''),
+    GITHUB_CLIENT_SECRET: z.string().default(''),
+    GOOGLE_CLIENT_ID: z.string().default(''),
+    GOOGLE_CLIENT_SECRET: z.string().default(''),
+    ACCESS_TOKEN_SECRET: z.string().min(1).default('access_secret'),
+    REFRESH_TOKEN_SECRET: z.string().min(1).default('refresh_secret'),
+    GOOGLE_CALLBACK_URL: z.string().url().default('http://127.0.0.1:4000/auth/google/callback'),
+    GITHUB_CALLBACK_URL: z.string().url().default('http://127.0.0.1:4000/auth/github/callback'),
+    DOMAIN: z.string().default('127.0.0.1'),
+    FRONTEND_URL: z.string().default(''),
+    REDIS_HOST: z.string().default('localhost'),
+    REDIS_PORT: z.coerce.number().int().positive().default(6379),
+    FIREBASE_API_KEY: z.string().default(''),
+    RECAPTCHA_SECRET_KEY: z.string().default(''),
+});
+
+const parseEnv = () => {
+    try {
+        return envSchema.parse(process.env);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            console.error('❌ Invalid environment variables:');
+            error.issues.forEach((issue) => {
+                const path = issue.path.join('.');
+                console.error(`  - ${path}: ${issue.message}`);
+            });
+            process.exit(1);
+        }
+        throw error;
+    }
 };
+
+export const ENV = parseEnv();
