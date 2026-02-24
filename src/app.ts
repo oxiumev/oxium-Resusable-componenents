@@ -5,13 +5,13 @@ import {
   helmetMiddleware,
   hppMiddleware,
   limiter,
-  mongoSanitizer,
 } from "./lib/security";
 import { globalErrorHandler } from "./lib/error/globalErrorHandler";
 import { authRoute } from "./module/auth/auth.route";
 import { testRoute } from "./module/test/test.route";
 import { otpRoute } from "./module/otp/otp.route";
 import { loggerMiddleware } from "./lib/logger/pino";
+import { fileRoute } from "./module/file/file.route";
 
 const app = express();
 
@@ -22,7 +22,6 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(mongoSanitizer);
 app.use(hppMiddleware);
 app.use(loggerMiddleware)
 
@@ -32,6 +31,7 @@ app.get("/", (req, res: Response) => {
 app.use("/auth",authRoute)
 app.use("/test",testRoute)
 app.use("/otp", otpRoute)
+app.use("/file",fileRoute)
 
 
 app.use(globalErrorHandler);

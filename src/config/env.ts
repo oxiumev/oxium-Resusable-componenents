@@ -22,6 +22,10 @@ const envSchema = z.object({
     REDIS_PORT: z.coerce.number().int().positive().default(6379),
     FIREBASE_API_KEY: z.string().default(''),
     RECAPTCHA_SECRET_KEY: z.string().default(''),
+    AWS_S3_BUCKET_NAME:z.string().default(''),
+    AWS_S3_REGION:z.string().default('ap-south-1'),
+    AWS_ACCESS_KEY_ID:z.string().default(''),
+    AWS_SECRET_ACCESS_KEY:z.string().default(''),
 });
 
 const parseEnv = () => {
