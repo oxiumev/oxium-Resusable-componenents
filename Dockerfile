@@ -3,6 +3,8 @@
 # ---------------------------------------
 FROM node:20-alpine AS base
 WORKDIR /app
+# Fontconfig + font for sharp SVG text watermark (e.g. in Docker)
+RUN apk add --no-cache fontconfig ttf-dejavu
 COPY package*.json ./
 
 # ---------------------------------------
@@ -27,6 +29,8 @@ RUN npm run build
 # ---------------------------------------
 FROM node:20-alpine AS production
 WORKDIR /app
+# Fontconfig + font for sharp SVG text watermark
+RUN apk add --no-cache fontconfig ttf-dejavu
 COPY package*.json ./
 # Install ONLY production dependencies
 RUN npm ci --omit=dev

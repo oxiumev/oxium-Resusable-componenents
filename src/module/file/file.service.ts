@@ -9,6 +9,9 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "../../lib/s3/config";
+import sharp from "sharp";
+import { pipeline } from "stream";
+import { promisify } from "util";
 import {
   MAX_EXPIRY,
   MAX_PARTS,
@@ -82,7 +85,7 @@ export const generateMultiPartUploadUrl = async ({
   const key = generateKey(fileName);
 
   // Initialize multipart upload without ContentType for safety
-  const createCommand = new CreateMultipartUploadCommand({ Bucket: BUCKET, Key: key, ContentType: contentType});
+  const createCommand = new CreateMultipartUploadCommand({ Bucket: BUCKET, Key: key, ContentType: contentType });
   const response = await s3.send(createCommand);
   if (!response.UploadId) throw new InternalServerError("Failed to initialize multipart upload");
 
@@ -152,7 +155,11 @@ export const saveFile = async ({ originalName, key, mimeType, size }: ISaveFile)
   return file;
 };
 
-export const getUrlFromPublicId = async (publicId: string, expiresIn?: number) => {
+export const getUrlFromPublicId = async (
+  publicId: string,
+  expiresIn?: number,
+  asAttachment = false
+) => {
   if (!publicId) throw new BadRequestError("publicId is required");
   const finalExpiry = validateExpiry(expiresIn);
 
@@ -162,7 +169,11 @@ export const getUrlFromPublicId = async (publicId: string, expiresIn?: number) =
   const command = new GetObjectCommand({
     Bucket: BUCKET,
     Key: file.key,
-    ResponseContentDisposition: `attachment; filename="${file.originalName}"`,
+    ...(asAttachment
+      ? {
+          ResponseContentDisposition: `attachment; filename="${file.originalName}"`,
+        }
+      : {}),
   });
 
   const signedUrl = await getSignedUrl(s3, command, { expiresIn: finalExpiry });
@@ -174,6 +185,7 @@ export const getUrlFromPublicId = async (publicId: string, expiresIn?: number) =
     size: file.size,
     publicUrl: signedUrl,
     expiresIn: finalExpiry,
+    key: file.key
   };
 };
 
@@ -193,4 +205,51 @@ export const deleteFile = async (publicId: string) => {
   await file.save();
 
   return { message: "File deleted successfully", publicId: file.publicId };
+};
+
+const pipe = promisify(pipeline);
+
+/** Cached SVG watermark overlay buffer. */
+let cachedWatermarkBuffer: Buffer | null = null;
+
+async function getWatermarkBuffer(): Promise<Buffer> {
+  if (cachedWatermarkBuffer) return cachedWatermarkBuffer;
+  const svg = `
+    <svg width="800" height="200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="800" height="200" fill="#000000" fill-opacity="0.55" />
+      <text
+        x="50%"
+        y="50%"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="sans-serif"
+        font-size="36"
+        font-weight="bold"
+        fill="#FFFFFF"
+        fill-opacity="0.95"
+      >
+        Restricted File For Free
+      </text>
+    </svg>
+  `;
+  cachedWatermarkBuffer = Buffer.from(svg);
+  return cachedWatermarkBuffer;
+}
+
+export const streamWatermarkFromS3 = async (
+  key: string,
+  res: import("express").Response,
+  mimeType?: string
+) => {
+  const { Body: s3Stream } = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+  if (!s3Stream) throw new Error("File stream not found");
+
+  const watermarkBuffer = await getWatermarkBuffer();
+  const transformer = sharp()
+    .composite([{ input: watermarkBuffer, gravity: "center" }]);
+
+  const contentType = mimeType && mimeType.startsWith("image/") ? mimeType : "image/jpeg";
+  res.setHeader("Content-Type", contentType);
+
+  await pipe(s3Stream as NodeJS.ReadableStream, transformer, res);
 };
