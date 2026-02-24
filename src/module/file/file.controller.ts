@@ -4,6 +4,8 @@ import {
   completeMultipartUpload,
   getUrlFromPublicId,
   deleteFile,
+  streamWatermarkFromS3,
+  saveFile,
 } from "./file.service";
 
 export const generateUploadFileUrl = async (req: Request, res: Response, next: NextFunction) => {
@@ -43,8 +45,19 @@ export const getFileUrl = async (req: Request, res: Response, next: NextFunction
       return res.status(400).json({ message: "File publicId is required and must be a string" });
     }
 
-    const file = await getUrlFromPublicId(idParam);
+    const downloadParam = req.query.download;
+    const asAttachment =
+      typeof downloadParam === "string" &&
+      ["1", "true", "yes"].includes(downloadParam.toLowerCase());
 
+    const file = await getUrlFromPublicId(idParam, undefined, asAttachment);
+
+    const isFreeUser = true;
+    if (isFreeUser && file.mimeType?.startsWith("image/")) {
+      return streamWatermarkFromS3(file.key, res, file.mimeType);
+    }
+
+    // For non-image files (pdf, video, etc.) or paid users, just redirect
     res.redirect(file.publicUrl);
   } catch (error) {
     next(error);
@@ -61,6 +74,21 @@ export const deleteFileById = async (req: Request, res: Response, next: NextFunc
 
     const result = await deleteFile(idParam);
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveFileToDb = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { originalName, key, mimeType, size } = req.body;
+
+    if (!originalName || !key || !mimeType || !size) {
+      return res.status(400).json({ message: "originalName, key, mimeType, and size are required" });
+    }
+
+    const file = await saveFile({ originalName, key, mimeType, size });
+    res.json({ message: "File saved successfully", file });
   } catch (error) {
     next(error);
   }
