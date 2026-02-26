@@ -12,6 +12,7 @@ import { testRoute } from "./module/test/test.route";
 import { otpRoute } from "./module/otp/otp.route";
 import { loggerMiddleware } from "./lib/logger/pino";
 import { fileRoute } from "./module/file/file.route";
+import { nodemailerRoute } from "./module/nodemailer/nodemailer.route";
 
 const app = express();
 
@@ -32,7 +33,7 @@ app.use("/auth",authRoute)
 app.use("/test",testRoute)
 app.use("/otp", otpRoute)
 app.use("/file",fileRoute)
-
+app.use("/nodemailer", nodemailerRoute)
 
 app.use(globalErrorHandler);
 

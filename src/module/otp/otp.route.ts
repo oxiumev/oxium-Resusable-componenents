@@ -4,5 +4,5 @@ import { verifyOtpRoute } from "./verifyOtp.route";
 
 export const otpRoute: Router = express.Router();
 
-otpRoute.post("/send", sendOtpRoute);
-otpRoute.post("/verify", verifyOtpRoute);
+otpRoute.post("/firebase/send", sendOtpRoute);
+otpRoute.post("/firebase/verify", verifyOtpRoute);

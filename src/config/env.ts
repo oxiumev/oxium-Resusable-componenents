@@ -26,6 +26,13 @@ const envSchema = z.object({
     AWS_S3_REGION:z.string().default('ap-south-1'),
     AWS_ACCESS_KEY_ID:z.string().default(''),
     AWS_SECRET_ACCESS_KEY:z.string().default(''),
+    // Nodemailer / SMTP
+    SMTP_HOST: z.string().default('smtp.gmail.com'),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_USER: z.string().default(''),
+    SMTP_PASS: z.string().default(''),
+    SMTP_FROM: z.string().default(''), // If set, used as full "From". If empty, built from SMTP_USER as no_reply.{user}@domain.
+    SMTP_FROM_NAME: z.string().default('Oxium No-Reply'), // Display name only when SMTP_FROM is empty (auto-built address).
 });
 
 const parseEnv = () => {
